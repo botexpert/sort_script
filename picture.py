@@ -10,19 +10,26 @@ import sys
 import shutil
 from os import path
 
+
 def recognize(known_face_encoding,unknown_face_picture_path):
     '''Funkcija uporedjuje poznata i nepoznata lica i vraca niz boolean vrednosti za svako nepoznato lice 
     koje poznato lice je pronadjeno'''
-
-    print("UKF PATH:{}".format(unknown_face_picture_path))
     
-    unknown_face_picture = face_recognition.load_image_file(unknown_face_picture_path)
-    unknown_face_encoding = face_recognition.face_encodings(unknown_face_picture)
-    
-    result = []
     res = None
+    uknown_faces = []
+    print("UKF PATH:{}".format(unknown_face_picture_path))
+    try:
+        unknown_face_picture = face_recognition.load_image_file(unknown_face_picture_path)
+        unknown_face_encoding = face_recognition.face_encodings(unknown_face_picture)
+        # uknown_faces.append(unknown_face_encoding)
+
+    except(IndexError):
+        return -1
+        
+    result = []
+    
     for encoding in unknown_face_encoding:
-        result.append(face_recognition.compare_faces(known_face_encoding,encoding,tolerance=0.60))
+        result.append(face_recognition.compare_faces(known_face_encoding,encoding,tolerance=0.70))
     
     for x in result:
         try:
@@ -80,11 +87,13 @@ def main(argv):
         unknown_path = path.join(unknown_folder,ukf)
         found_faces = recognize(known_faces,unknown_path)
         print(found_faces)   
-        if found_faces != None:
+        if found_faces != None and found_faces != -1:
             where = path.join (base_dir,known_map.get(found_faces))
             print(where)
 
             shutil.copy(unknown_path,where)
+        elif found_faces == -1:
+            shutil.move(unknown_path,no_face_path)
         else:
             shutil.copy(unknown_path,path.join(base_dir,'unknown'))
 
